@@ -17,9 +17,7 @@ from Pinyin2Hanzi import DefaultDagParams, dag, simplify_pinyin, is_pinyin
 dagparams = DefaultDagParams()
 from pypinyin import lazy_pinyin
 
-from Levenshtein import distance as levenshtein
 import difflib
-from sklearn.metrics import jaccard_score as jaccard
 
 try:
     import torch_directml
@@ -404,6 +402,8 @@ def standardize_address(x):
     
     
 def standardize_date(d):
+    if check_NA_values(d):
+        return d
     try:
         yyyy = re.search(r'\d{4}', d).group()
         try:
@@ -542,30 +542,30 @@ if __name__ == '__main__':
         # break
         print(f"Processing {dataset_name}")        
     
-        # 全字段嵌入去重
+        # 提示词+全字段嵌入去重
         if args.allfield_embed:
-            if not os.path.exists(f'./{args.tag}/全字段嵌入/{dataset_name}_全字段嵌入.xlsx'):
+            if not os.path.exists(f'./{args.tag}/提示词+全字段嵌入/{dataset_name}_提示词+全字段嵌入.xlsx'):
                 t0 = time.time()
-                os.makedirs(f'./{args.tag}/全字段嵌入', exist_ok=True)
+                os.makedirs(f'./{args.tag}/提示词+全字段嵌入', exist_ok=True)
                 rec_df = rec_df_all.loc[rec_df_all['文件名'] == dataset_name]
                 # prompt = deduper.build_prompt()
                 # uid, text = deduper.build_infotext(rec_df)
                 rec_embs = deduper.build_embs(rec_df)
                 rec_dist = deduper.compute_emb_dist(rec_embs)
                 if args.plot:
-                    deduper.plot_overview(rec_dist, labels=rec_df['UID'].values, figsize=(20, 10), path=f'./{"demo" if args.demo else (args.tag + "/全字段嵌入")}/{dataset_name}_全字段嵌入_overview.png')
+                    deduper.plot_overview(rec_dist, labels=rec_df['UID'].values, figsize=(20, 10), path=f'./{"demo" if args.demo else (args.tag + "/提示词+全字段嵌入")}/{dataset_name}_提示词+全字段嵌入_overview.png')
                 group_ids = deduper.deduplicate(rec_dist, method='single', ps=[0.01, 0.05, 0.10, 0.20])
                 for p, group_id in group_ids.items():
                     rec_df[p] = group_id
                 
                 df = pd.DataFrame(group_ids).apply(lambda x: (~pd.isna(x)).sum()).reset_index()
                 df.columns = ['列','#重复条目数']
-                print(f'全字段嵌入：{time.time() - t0:.2f}秒')
+                print(f'提示词+全字段嵌入：{time.time() - t0:.2f}秒')
                 print(df)
                 
-                rec_df.to_excel(f'./{"demo" if args.demo else (args.tag + "/全字段嵌入")}/{dataset_name}_全字段嵌入.xlsx', index=False)
+                rec_df.to_excel(f'./{"demo" if args.demo else (args.tag + "/提示词+全字段嵌入")}/{dataset_name}_提示词+全字段嵌入.xlsx', index=False)
             else:
-                print(f"Skip 全字段嵌入/{dataset_name}: Already processed")
+                print(f"Skip 提示词+全字段嵌入/{dataset_name}: Already processed")
         
         
         # 单字段嵌入加权去重
@@ -598,9 +598,9 @@ if __name__ == '__main__':
         
         # 混合去重（硬汇总）
         if args.mixed_hard:
-            if not os.path.exists(f'./{args.tag}/混合去重硬汇总/{dataset_name}_混合去重硬汇总.xlsx'):
+            if not os.path.exists(f'./{args.tag}/子字符串+语义匹配计数/{dataset_name}_子字符串+语义匹配计数.xlsx'):
                 t0 = time.time()
-                os.makedirs(f'./{args.tag}/混合去重硬汇总', exist_ok=True)
+                os.makedirs(f'./{args.tag}/子字符串+语义匹配计数', exist_ok=True)
                 rec_df = rec_df_all.loc[rec_df_all['文件名'] == dataset_name]
                 
                 field_cutoffs = {
@@ -620,26 +620,26 @@ if __name__ == '__main__':
                 rec_dist_dict = {**rec_emb_dist_dict, **rec_subseq_dist_dict}
                 rec_dist = deduper.merge_dist(rec_dist_dict, method='top')
                 if args.plot:
-                    deduper.plot_overview(rec_dist - rec_dist.min(), labels=rec_df['UID'].values, figsize=(20, 10), path=f'{"demo" if args.demo else (args.tag + "/混合去重硬汇总")}/{dataset_name}_混合去重硬汇总_overview.png')
+                    deduper.plot_overview(rec_dist - rec_dist.min(), labels=rec_df['UID'].values, figsize=(20, 10), path=f'{"demo" if args.demo else (args.tag + "/子字符串+语义匹配计数")}/{dataset_name}_子字符串+语义匹配计数_overview.png')
                 group_ids = deduper.deduplicate(rec_dist, method='top', ks=[2, 3, 4, 5])
                 for p, group_id in group_ids.items():
                     rec_df[p] = group_id
                     
                 df = pd.DataFrame(group_ids).apply(lambda x: (~pd.isna(x)).sum()).reset_index()
                 df.columns = ['列','#重复条目数']
-                print(f'混合去重（硬汇总）：{time.time() - t0:.2f}秒')
+                print(f'子字符串+语义匹配计数：{time.time() - t0:.2f}秒')
                 print(df)
                 
-                rec_df.to_excel(f'./{"demo" if args.demo else (args.tag + "/混合去重硬汇总")}/{dataset_name}_混合去重硬汇总.xlsx', index=False)
+                rec_df.to_excel(f'./{"demo" if args.demo else (args.tag + "/子字符串+语义匹配计数")}/{dataset_name}_子字符串+语义匹配计数.xlsx', index=False)
             else:
-                print(f"Skip 混合去重硬汇总/{dataset_name}: Already processed")
+                print(f"Skip 子字符串+语义匹配计数/{dataset_name}: Already processed")
 
         
         # 混合去重（软汇总）
         if args.mixed_soft:
-            if not os.path.exists(f'./{args.tag}/混合去重软汇总/{dataset_name}_混合去重软汇总.xlsx'):
+            if not os.path.exists(f'./{args.tag}/子字符串+语义距离加权/{dataset_name}_子字符串+语义距离加权.xlsx'):
                 t0 = time.time()
-                os.makedirs(f'./{args.tag}/混合去重软汇总', exist_ok=True)
+                os.makedirs(f'./{args.tag}/子字符串+语义距离加权', exist_ok=True)
                 rec_df = rec_df_all.loc[rec_df_all['文件名'] == dataset_name]
                 rec_emb_dict = deduper.build_embs_each_field(
                     rec_df, 
@@ -652,19 +652,19 @@ if __name__ == '__main__':
                 )
                 rec_dist = deduper.merge_dist(rec_dist_dict, weight_dict=field_weights, method='arithmetic')
                 if args.plot:
-                    deduper.plot_overview(rec_dist, labels=rec_df['UID'].values, figsize=(20, 10), path=f'{"demo" if args.demo else (args.tag + "/混合去重软汇总")}/{dataset_name}_混合去重软汇总_overview.png')
+                    deduper.plot_overview(rec_dist, labels=rec_df['UID'].values, figsize=(20, 10), path=f'{"demo" if args.demo else (args.tag + "/子字符串+语义距离加权")}/{dataset_name}_子字符串+语义距离加权_overview.png')
                 group_ids = deduper.deduplicate(rec_dist, method='single', ps=[0.01, 0.05, 0.10, 0.20])
                 for p, group_id in group_ids.items():
                     rec_df[p] = group_id
                     
                 df = pd.DataFrame(group_ids).apply(lambda x: (~pd.isna(x)).sum()).reset_index()
                 df.columns = ['列','#重复条目数']
-                print(f'混合去重（软汇总）：{time.time() - t0:.2f}秒')
+                print(f'子字符串+语义距离加权：{time.time() - t0:.2f}秒')
                 print(df)
                     
-                rec_df.to_excel(f'./{"demo" if args.demo else (args.tag + "/混合去重软汇总")}/{dataset_name}_混合去重软汇总.xlsx', index=False)
+                rec_df.to_excel(f'./{"demo" if args.demo else (args.tag + "/子字符串+语义距离加权")}/{dataset_name}_子字符串+语义距离加权.xlsx', index=False)
             else:
-                print(f"Skip 混合去重软汇总/{dataset_name}: Already processed")
+                print(f"Skip 子字符串+语义距离加权/{dataset_name}: Already processed")
                 
             
     print('Done')
