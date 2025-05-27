@@ -1,4 +1,4 @@
-
+#!/home/xcheng/miniconda3/envs/qf/bin/python
 import collections, warnings, os, sys, time
 warnings.filterwarnings("ignore")
 import pandas as pd
@@ -31,11 +31,24 @@ except:
 
 
 def check_NA_values(s):
-    if "未知" in str(s) or "未提及" in str(s) or str(s) == "无":
+    if "未知" in str(s) or "未提及" in str(s) or "未提供" in str(s) or "未填写" in str(s) or "Not Provided" in str(s) or str(s) == "无":
         return True
     if str(s).isspace() or str(s) == '':
         return True
     return False
+
+def strip_cell_values(df):
+    """
+    去除DataFrame中所有字符串类型单元格的两端空白字符，包括标题空白字符
+    """
+    # 先处理列名
+    df.columns = df.columns.str.strip()
+    
+    # 处理单元格内容
+    for col in df.columns:
+        if df[col].dtype == 'object':  # 只处理字符串类型的列
+            df[col] = df[col].apply(lambda x: x.strip() if isinstance(x, str) else x)
+    return df
 
 def vers_mean(x, axis=None, weights=None, method='arithmetic'):
     #put the values in weights to correct dimension for broadcasting
@@ -385,7 +398,7 @@ class Deduplication(object):
             return group_ids
                 
 
-def standardize_address(x):
+def standardize_address(x, uid=None):
     if check_NA_values(x):
         return x
     try:
@@ -397,11 +410,11 @@ def standardize_address(x):
         return x_normal
     
     except:
-        print(x, 'Not Found')
+        print(x, 'Not Found', f'for {uid}' if uid is not None else '')
         return x
     
     
-def standardize_date(d):
+def standardize_date(d, uid=None):
     if check_NA_values(d):
         return d
     try:
@@ -412,7 +425,7 @@ def standardize_date(d):
         except:
             return yyyy
     except:
-        print(d, 'Not Date')
+        print(d, 'Not Date', f'for {uid}' if uid is not None else '')
         return d
     
 def parse_pinyin(s):
@@ -445,7 +458,7 @@ def remove_pinyin_name(s, name):
         name_pinyin += ' ' + name_elements[0] + name_elements[1] # 两字姓
         name_pinyin += ' ' + name_elements[2] + name_elements[3] # 两字名
     isname_list = [(subs in name_pinyin) or (subs == name) for subs in s_lst]
-    return '；'.join([s for s, flag in zip(s_lst, isname_list) if not flag])
+    return '；'.join([str(s) for s, flag in zip(s_lst, isname_list) if not flag])
     
 
 def check_address(x):
@@ -467,6 +480,16 @@ def remove_cidian(x):
         x = x.replace(book, '')
     return x.strip()
 
+def concat_fields(x):
+    return '；'.join(list(set([str(f) for f in x if not check_NA_values(f)])))
+
+def merge_records(rec_df, id_field='CID'):
+    if isinstance(id_field, str):
+        id_field = [id_field]
+    rec_df_merged = rec_df.groupby(id_field).agg({field: concat_fields for field in rec_df.columns if field not in id_field}).reset_index()    
+    print(f"Merge {rec_df.shape[0] - rec_df_merged.shape[0]} records with the same {id_field}")
+    return rec_df_merged
+
 
 
 
@@ -482,6 +505,8 @@ if __name__ == '__main__':
     parser.add_argument('--mixed_hard', action='store_true', help='Whether to use mixed distances for hard clustering')
     parser.add_argument('--mixed_soft', action='store_true', help='Whether to use mixed distances for soft clustering')
     parser.add_argument('--tag', type=str, default='output', help='The tag for the output files (default: output)')
+    parser.add_argument('--merge_cid', action='store_true', help='Whether to merge the records with the same control ID')
+    parser.add_argument('--input_dir', type=str, default='./entity_matching', help='The input directory')
     # args = parser.parse_args([])
     args = parser.parse_args()
     
@@ -490,6 +515,8 @@ if __name__ == '__main__':
         '生卒年（活动日期）': '生卒年或个人活动日期',
         '生卒年': '生卒年或个人活动日期',
         '生卒年/个人活动日期': '生卒年或个人活动日期',
+        '生卒年/活动日期': '生卒年或个人活动日期',
+        '发表的著作': '发表的著作实体',
     }
     # candidate_models = [
     #     'shibing624/text2vec-base-chinese',
@@ -498,23 +525,29 @@ if __name__ == '__main__':
     # model = SentenceTransformer('distiluse-base-multilingual-cased-v1')
     # model = SentenceTransformer('paraphrase-multilingual-mpnet-base-v2')
 
-    fname_list = glob.glob('./entity_matching/*.xlsx')
+    fname_list = glob.glob(f'{args.input_dir}/*.xlsx')
     
     # clean and process the data
-    rec_df_all = pd.concat([pd.read_excel(fname).rename(columns=rename_dict).assign(文件名=fname.split('/')[-1].split('.')[0]) for fname in tqdm.tqdm(fname_list)], axis=0)
+    rec_df_all = pd.concat([
+        (strip_cell_values(pd.read_excel(fname))
+         .rename(columns=rename_dict)
+         .assign(文件名=fname.split('/')[-1].split('.')[0].strip()))
+        for fname in tqdm.tqdm(fname_list)
+    ], axis=0)
     rec_df_all.fillna('', inplace=True)
+    rec_df_all['UID'] = rec_df_all['文件名'] + '_' + rec_df_all.index.astype(str)
     rec_df_all['别名'] = rec_df_all[['姓名','别名']].apply(lambda x: '，'.join(x.to_list()) if not check_NA_values(x[1]) else x[0], axis=1)
     rec_df_all['姓名'] = rec_df_all['文件名'].to_list()
     rec_df_all['别名'] = rec_df_all[['姓名','别名']].apply(lambda x: remove_pinyin_name(x['别名'], x['姓名']), axis=1)
-    rec_df_all['UID'] = rec_df_all['文件名'] + '_' + rec_df_all.index.astype(str)
-    rec_df_all['籍贯'] = rec_df_all['籍贯'].apply(standardize_address)
+    rec_df_all['籍贯'] = rec_df_all.apply(lambda x: standardize_address(x['籍贯'], x['UID']), axis=1)
+    rec_df_all['生卒年或个人活动日期'] = rec_df_all.apply(lambda x: standardize_date(x['生卒年或个人活动日期'], x['UID']), axis=1)
     rec_df_all['发表的著作实体'] = rec_df_all['发表的著作实体'].apply(remove_cidian)
     rec_df_all['发表的著作实体'] = rec_df_all['发表的著作实体'].apply(standardize_literature)
     rec_df_all['活动领域'] = rec_df_all['活动领域'].apply(standardize_literature)
     rec_df_all['受教育机构'] = rec_df_all['受教育机构'].apply(standardize_literature)
     rec_df_all['在职单位'] = rec_df_all['在职单位'].apply(standardize_literature)
     rec_df_all['职业'] = rec_df_all['职业'].apply(standardize_literature)
-    rec_df_all['生卒年或个人活动日期'] = rec_df_all['生卒年或个人活动日期'].apply(standardize_date)
+    rec_df_all = merge_records(rec_df_all, id_field=['文件名', '控制号'])
     
     # rec_df_comb = rec_df_all[['生卒年或个人活动日期', '发表的著作实体', '籍贯', '活动领域', '职业', '受教育机构', '在职单位', 'UID', '文件名']]
     # rec_df_comb['姓名和别名'] = rec_df_all[['姓名', '别名']].apply(lambda x: x[0] + '；' + (x[1] if not check_NA_values(x[1]) else x[0]), axis=1)
@@ -535,7 +568,7 @@ if __name__ == '__main__':
     # deduper = Deduplication(model_name='distiluse-base-multilingual-cased-v1', field_weights=field_weights)
     deduper = Deduplication(model_name=args.model, field_weights=field_weights, device=DEVICE)
 
-    
+    # print(rec_df_all['文件名'].unique(), rec_df_all['文件名'].unique().shape)
     # dataset_name = '刘伟'
     # plot_flag = False
     for dataset_name in tqdm.tqdm(rec_df_all['文件名'].unique()):

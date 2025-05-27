@@ -1,0 +1,81 @@
+#
+# A fatal error has been detected by the Java Runtime Environment:
+#
+#  SIGSEGV (0xb) at pc=0x00007fcee403864a, pid=40009, tid=40009
+#
+# JRE version: OpenJDK Runtime Environment (11.0.27+6) (build 11.0.27+6-post-Ubuntu-0ubuntu122.04)
+# Java VM: OpenJDK 64-Bit Server VM (11.0.27+6-post-Ubuntu-0ubuntu122.04, mixed mode, sharing, tiered, compressed oops, g1 gc, linux-amd64)
+# Problematic frame:
+# C  [libpyside6.abi3.so.6.7+0x1e64a]
+#
+# Core dump will be written. Default location: Core dumps may be processed with "/wsl-capture-crash %t %E %p %s" (or dumping to /mnt/d/OneDrive/OneDrive - sjtu.edu.cn/Records/CUHK/Research/AssistantOthers/zyk/dedup-librecord/core.40009)
+#
+# If you would like to submit a bug report, please visit:
+#   https://bugs.launchpad.net/ubuntu/+source/openjdk-lts
+# The crash happened outside the Java Virtual Machine in native code.
+# See problematic frame for where to report the bug.
+#
+
+---------------  S U M M A R Y ------------
+
+Command Line: -ea -javaagent:/home/xcheng/miniconda3/envs/qf/lib/python3.11/site-packages/org.jpype.jar 
+
+Host: 12th Gen Intel(R) Core(TM) i7-12700, 20 cores, 47G, Ubuntu 22.04.5 LTS
+Time: Tue May 27 16:28:20 2025 HKT elapsed time: 431.199199 seconds (0d 0h 7m 11s)
+
+---------------  T H R E A D  ---------------
+
+Current thread (0x000055726cdcd000):  JavaThread "main" [_thread_in_native, id=40009, stack(0x00007ffe9b9ba000,0x00007ffe9baba000)]
+
+Stack: [0x00007ffe9b9ba000,0x00007ffe9baba000],  sp=0x00007ffe9bab7cf8,  free space=1015k
+Native frames: (J=compiled Java code, A=aot compiled Java code, j=interpreted, Vv=VM code, C=native code)
+C  [libpyside6.abi3.so.6.7+0x1e64a]
+
+
+siginfo: si_signo: 11 (SIGSEGV), si_code: 1 (SEGV_MAPERR), si_addr: 0x0000000000000020
+
+Register to memory mapping:
+
+RAX=0x0000000000000020 is an unknown value
+RBX=0x00007ffe9bab7d08 is pointing into the stack for thread: 0x000055726cdcd000
+RCX=0x00005572fb28aee0 points into unknown readable memory: 0x0000000000000000 | 00 00 00 00 00 00 00 00
+RDX=0x0 is NULL
+RSP=0x00007ffe9bab7cf8 is pointing into the stack for thread: 0x000055726cdcd000
+RBP=0x00007fcee51e0e00 points into unknown readable memory: 0x0000000000000005 | 05 00 00 00 00 00 00 00
+RSI=0x0000000000082000 is an unknown value
+RDI=0x00007ffe9bab7d08 is pointing into the stack for thread: 0x000055726cdcd000
+R8 =0x00007fcbd97ec000 points into unknown readable memory: 0x00000000000000fe | fe 00 00 00 00 00 00 00
+R9 =0x0 is NULL
+R10=0x0 is NULL
+R11=0x000000007fffffff is an unknown value
+R12=0x00007fcee51e0e00 points into unknown readable memory: 0x0000000000000005 | 05 00 00 00 00 00 00 00
+R13=0x0000000000000078 is an unknown value
+R14=0x00007fd140abf090 points into unknown readable memory: 0x0000000000000000 | 00 00 00 00 00 00 00 00
+R15=0x0000000000000001 is an unknown value
+
+
+Registers:
+RAX=0x0000000000000020, RBX=0x00007ffe9bab7d08, RCX=0x00005572fb28aee0, RDX=0x0000000000000000
+RSP=0x00007ffe9bab7cf8, RBP=0x00007fcee51e0e00, RSI=0x0000000000082000, RDI=0x00007ffe9bab7d08
+R8 =0x00007fcbd97ec000, R9 =0x0000000000000000, R10=0x0000000000000000, R11=0x000000007fffffff
+R12=0x00007fcee51e0e00, R13=0x0000000000000078, R14=0x00007fd140abf090, R15=0x0000000000000001
+RIP=0x00007fcee403864a, EFLAGS=0x0000000000010202, CSGSFS=0x002b000000000033, ERR=0x0000000000000004
+  TRAPNO=0x000000000000000e
+
+Top of Stack: (sp=0x00007ffe9bab7cf8)
+0x00007ffe9bab7cf8:   00007fcee40386b8 00007fcee51e0e00
+0x00007ffe9bab7d08:   00005572fb28aee0 0000000000000000
+0x00007ffe9bab7d18:   81577b41ada91c00 0000557270dc44d0
+0x00007ffe9bab7d28:   00007fcee40386f5 00007fcee4055f08 
+
+Instructions: (pc=0x00007fcee403864a)
+0x00007fcee403854a:   7f 18 64 48 8b 04 25 28 00 00 00 48 89 44 24 18
+0x00007fcee403855a:   31 c0 48 8b 5e 08 4c 8d 64 24 08 48 89 ee e8 13
+0x00007fcee403856a:   4b ff ff 48 89 de 48 89 c7 e8 08 4b ff ff 48 89
+0x00007fcee403857a:   c2 49 8b 45 10 48 ff c8 48 21 d0 48 89 c2 83 e0
+0x00007fcee403858a:   7f 48 c1 ea 07 48 89 44 24 10 48 69 d2 90 00 00
+0x00007fcee403859a:   00 49 03 55 20 48 89 54 24 08 48 8b 54 24 08 48
+0x00007fcee40385aa:   8b 44 24 10 0f b6 04 02 48 3d ff 00 00 00 75 20
+0x00007fcee40385ba:   48 8b 44 24 08 48 8b 54 24 10 48 8b 4c 24 18 64
+0x00007fcee40385ca:   48 2b 0c 25 28 00 00 00 74 29 ff 15 26 c2 01 00
+0x00007fcee40385da:   48 c1 e0 05 48 03 82 80 00 00 00 48
