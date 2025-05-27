@@ -1,0 +1,10 @@
+tag: result_20250527-1448
+model: distiluse-base-multilingual-cased-v1
+input_dir: ./entity_matching2
+plot: true
+demo: false
+allfield_embed: true
+singlefield_embed: true
+mixed_hard: true
+mixed_soft: true
+

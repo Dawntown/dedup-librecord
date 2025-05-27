@@ -97,9 +97,31 @@ def impute_dist(d_mtx, na_list, method='mean', fixed_value=None):
     for i in np.where(na_list)[0]:
         d_mtx[i, i] = 0
     
-    assert np.abs(d_mtx - d_mtx.T).max() < 1e-8
+    d_mtx, is_symmetric = verify_and_fix_symmetry(d_mtx)
     
-    return (d_mtx + d_mtx.T) / 2
+    assert is_symmetric
+    
+    return d_mtx
+
+
+def verify_and_fix_symmetry(matrix, rtol=1e-05, atol=1e-08):
+    """
+    验证并修复矩阵的对称性
+    """
+    # 检查对称性
+    is_symmetric = np.allclose(matrix, matrix.T, rtol=rtol, atol=atol)
+    
+    if not is_symmetric:
+        # 找出不对称的位置
+        diff = np.abs(matrix - matrix.T)
+        max_diff = np.max(diff)
+        print(f"最大不对称差异: {max_diff}")
+        
+        # 修复对称性
+        fixed_matrix = (matrix + matrix.T) / 2
+        return fixed_matrix, is_symmetric
+    
+    return matrix, is_symmetric
 
 
 def longest_common_subsequence(s1, s2):
@@ -321,12 +343,17 @@ class Deduplication(object):
             for i, (field, w) in enumerate(weight_dict.items()):
                 merged_dist[i] = (d_mtx_dict[field] - d_mtx_dict[field].min()) / (d_mtx_dict[field].max() - d_mtx_dict[field].min())
                 weights[i] = w
-            return vers_mean(merged_dist, axis=0, weights=weights, method=method)
+            d_mtx = vers_mean(merged_dist, axis=0, weights=weights, method=method)
+            d_mtx, is_symmetric = verify_and_fix_symmetry(d_mtx)
+            assert is_symmetric
+            return d_mtx
         elif method == 'top':
             n = list(d_mtx_dict.values())[0].shape[0]
             merged_dist = np.zeros((n, n))
             for field, d_mtx in d_mtx_dict.items():
                 merged_dist += d_mtx - 1
+            merged_dist, is_symmetric = verify_and_fix_symmetry(merged_dist)
+            assert is_symmetric
             return merged_dist
         else:
             raise ValueError("Method not recognized")
