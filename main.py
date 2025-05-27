@@ -121,7 +121,7 @@ def verify_and_fix_symmetry(matrix, rtol=1e-05, atol=1e-08):
         fixed_matrix = (matrix + matrix.T) / 2
         return fixed_matrix, is_symmetric
     
-    return matrix, is_symmetric
+    return (matrix + matrix.T) / 2, is_symmetric # 确保对称性
 
 
 def longest_common_subsequence(s1, s2):
@@ -522,6 +522,7 @@ def merge_records(rec_df, id_field='CID'):
 
 if __name__ == '__main__':
     import glob, tqdm, argparse
+    import os
     
     parser = argparse.ArgumentParser()
     parser.add_argument('--plot', action='store_true', help='Whether to plot the results')
@@ -601,7 +602,6 @@ if __name__ == '__main__':
     for dataset_name in tqdm.tqdm(rec_df_all['文件名'].unique()):
         # break
         print(f"Processing {dataset_name}")        
-    
         # 提示词+全字段嵌入去重
         if args.allfield_embed:
             if not os.path.exists(f'./{args.tag}/提示词+全字段嵌入/{dataset_name}_提示词+全字段嵌入.xlsx'):
@@ -710,6 +710,7 @@ if __name__ == '__main__':
                     rec_df[[k for k,v in field_cutoffs.items() if v and (v < 0)]].to_dict(orient='list'),
                     field_cutoffs
                 )
+                rec_dist_dict = {**rec_emb_dist_dict, **rec_subseq_dist_dict}
                 rec_dist = deduper.merge_dist(rec_dist_dict, weight_dict=field_weights, method='arithmetic')
                 if args.plot:
                     deduper.plot_overview(rec_dist, labels=rec_df['UID'].values, figsize=(20, 10), path=f'{"demo" if args.demo else (args.tag + "/子字符串+语义距离加权")}/{dataset_name}_子字符串+语义距离加权_overview.png')
