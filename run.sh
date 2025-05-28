@@ -56,6 +56,18 @@ proj_path="./"
 
 # zip -r result_20250107-1455.zip result_20250107-1455
 
+# 20250527-1300
+$python_path $proj_path/main.py \
+--plot \
+--allfield_embed \
+--singlefield_embed \
+--mixed_hard \
+--mixed_soft \
+--tag "result_20250527-1300" \
+--model "GanymedeNil/text2vec-large-chinese" \
+--input_dir "./entity_matching2"
+
+zip -r result_20250527-1300.zip result_20250527-1300
 
 # 20250527-1448
 $python_path $proj_path/main.py \
@@ -72,15 +84,3 @@ $python_path $proj_path/main.py \
 zip -r result_20250527-1448.zip result_20250527-1448
 
 
-# 20250527-1300
-$python_path $proj_path/main.py \
---plot \
---allfield_embed \
---singlefield_embed \
---mixed_hard \
---mixed_soft \
---tag "result_20250527-1300" \
---model "GanymedeNil/text2vec-large-chinese" \
---input_dir "./entity_matching2"
-
-zip -r result_20250527-1300.zip result_20250527-1300
