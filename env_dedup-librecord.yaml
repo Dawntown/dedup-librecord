@@ -17,3 +17,4 @@ dependencies:
     - GeocodingCHN==1.4.5
     - Pinyin2Hanzi==0.1.1
     - pypinyin==0.53.0
+    - openpyxl

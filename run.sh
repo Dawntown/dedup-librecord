@@ -1,4 +1,4 @@
-python_path=/home/xcheng/miniconda3/envs/qf/bin/python
+python_path=/home/xcheng/pkgs/micromamba/envs/qf/bin/python
 proj_path="./"
 
 
@@ -56,31 +56,75 @@ proj_path="./"
 
 # zip -r result_20250107-1455.zip result_20250107-1455
 
-# 20250527-1300
+# # 20250527-1300
+# $python_path $proj_path/main.py \
+# --plot \
+# --allfield_embed \
+# --singlefield_embed \
+# --mixed_hard \
+# --mixed_soft \
+# --tag "result_20250527-1300" \
+# --model "GanymedeNil/text2vec-large-chinese" \
+# --input_dir "./entity_matching2"
+
+# zip -r result_20250527-1300.zip result_20250527-1300
+
+# # 20250527-1448
+# $python_path $proj_path/main.py \
+# --plot \
+# --allfield_embed \
+# --singlefield_embed \
+# --mixed_hard \
+# --mixed_soft \
+# --tag "result_20250527-1448" \
+# --model "distiluse-base-multilingual-cased-v1" \
+# --input_dir "./entity_matching2"
+
+
+# zip -r result_20250527-1448.zip result_20250527-1448
+
+
+# # 20250529-1632
+# $python_path $proj_path/main.py \
+# --plot \
+# --allfield_embed \
+# --singlefield_embed \
+# --mixed_hard \
+# --mixed_soft \
+# --tag "result_20250529-1632" \
+# --model "GanymedeNil/text2vec-large-chinese" \
+# --input_dir "./entity_matching3"
+
+
+# zip -r result_20250529-1632.zip result_20250529-1632
+
+
+
+# # 20250529-1648
+# $python_path $proj_path/main.py \
+# --plot \
+# --allfield_embed \
+# --singlefield_embed \
+# --mixed_hard \
+# --mixed_soft \
+# --tag "result_20250529-1648" \
+# --model "distiluse-base-multilingual-cased-v1" \
+# --input_dir "./entity_matching3"
+
+
+# zip -r result_20250529-1648.zip result_20250529-1648
+
+
+# 20251015-1648
 $python_path $proj_path/main.py \
 --plot \
 --allfield_embed \
 --singlefield_embed \
 --mixed_hard \
 --mixed_soft \
---tag "result_20250527-1300" \
+--tag "result_20251015-1648" \
 --model "GanymedeNil/text2vec-large-chinese" \
---input_dir "./entity_matching2"
+--input_dir "./entity_matching"
 
-zip -r result_20250527-1300.zip result_20250527-1300
-
-# 20250527-1448
-$python_path $proj_path/main.py \
---plot \
---allfield_embed \
---singlefield_embed \
---mixed_hard \
---mixed_soft \
---tag "result_20250527-1448" \
---model "distiluse-base-multilingual-cased-v1" \
---input_dir "./entity_matching2"
-
-
-zip -r result_20250527-1448.zip result_20250527-1448
-
+zip -r result_20251015-1648.zip result_20251015-1648
 

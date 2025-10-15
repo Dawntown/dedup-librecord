@@ -9,7 +9,10 @@ from scipy.spatial.distance import pdist, squareform
 from sentence_transformers import SentenceTransformer
 import matplotlib.pyplot as plt
 import seaborn as sns
-sns.set_theme(font="SimSun")
+sns.set_theme(font="SimSun", style="ticks")
+plt.rcParams['font.family'] = 'SimSun'
+plt.rcParams['axes.unicode_minus'] = False
+plt.rcParams['pdf.fonttype'] = 42
 
 from GeocodingCHN import Geocoding
 geocoding = Geocoding()
@@ -362,25 +365,26 @@ class Deduplication(object):
         # 绘制距离分布直方图
         if len(distances.shape) == 2:
             distances = squareform(distances)
-        sns.histplot(distances, bins=100, ax=ax)
+        sns.histplot(distances, bins=50, ax=ax)
         ax.set_title(f"HC Distance Distribution for {dataset_name}", fontsize=15)
         ax.set_xlabel("Distance", fontsize=12)
         ax.set_ylabel("Frequency", fontsize=12)
     
     def plot_dendrogram(self, linkages, labels, threshold, dataset_name='dataset', ax=None):
         # 绘制树状图（dendrogram）
-        dendrogram(
-            linkages, 
-            labels=labels, 
-            orientation='left',
-            color_threshold=threshold,
-            ax=ax
-        )
+        with plt.rc_context({'lines.linewidth': 1.0}):
+            dendrogram(
+                linkages, 
+                labels=labels, 
+                orientation='left',
+                color_threshold=threshold,
+                ax=ax
+            )
         ax.set_title(f"HC Dendrogram for {dataset_name}", fontsize=15)
         ax.set_ylabel("Unique ID", fontsize=12)
         ax.set_xlabel("Distance", fontsize=12)
         
-    def plot_overview(self, distances, labels, figsize=(10, 10), path=None):
+    def plot_overview(self, distances, labels, figsize=(8, 8), path=None):
         linkages = linkage(squareform(distances) - distances.min(), method='single')
         fig, axs = plt.subplots(1, 2, figsize=figsize)
         self.plot_distance_hist(distances, dataset_name='dataset', ax=axs[0])
@@ -601,6 +605,8 @@ if __name__ == '__main__':
     # plot_flag = False
     for dataset_name in tqdm.tqdm(rec_df_all['文件名'].unique()):
         # break
+        if dataset_name != "刘伟":
+            continue
         print(f"Processing {dataset_name}")        
         # 提示词+全字段嵌入去重
         if args.allfield_embed:
@@ -613,7 +619,7 @@ if __name__ == '__main__':
                 rec_embs = deduper.build_embs(rec_df)
                 rec_dist = deduper.compute_emb_dist(rec_embs)
                 if args.plot:
-                    deduper.plot_overview(rec_dist, labels=rec_df['UID'].values, figsize=(20, 10), path=f'./{"demo" if args.demo else (args.tag + "/提示词+全字段嵌入")}/{dataset_name}_提示词+全字段嵌入_overview.png')
+                    deduper.plot_overview(rec_dist, labels=rec_df['UID'].values, figsize=(12, 6), path=f'./{"demo" if args.demo else (args.tag + "/提示词+全字段嵌入")}/{dataset_name}_提示词+全字段嵌入_overview.pdf')
                 group_ids = deduper.deduplicate(rec_dist, method='single', ps=[0.01, 0.05, 0.10, 0.20])
                 for p, group_id in group_ids.items():
                     rec_df[p] = group_id
@@ -641,7 +647,7 @@ if __name__ == '__main__':
                 rec_dist_dict = deduper.compute_emb_dist(rec_emb_dict)
                 rec_dist = deduper.merge_dist(rec_dist_dict, weight_dict=field_weights, method='arithmetic')
                 if args.plot:
-                    deduper.plot_overview(rec_dist, labels=rec_df['UID'].values, figsize=(20, 10), path=f'{"demo" if args.demo else (args.tag + "/单字段嵌入加权")}/{dataset_name}_单字段嵌入加权_overview.png')
+                    deduper.plot_overview(rec_dist, labels=rec_df['UID'].values, figsize=(12, 6), path=f'{"demo" if args.demo else (args.tag + "/单字段嵌入加权")}/{dataset_name}_单字段嵌入加权_overview.pdf')
                 group_ids = deduper.deduplicate(rec_dist, method='single', ps=[0.01, 0.05, 0.10, 0.20])
                 for p, group_id in group_ids.items():
                     rec_df[p] = group_id
@@ -680,7 +686,7 @@ if __name__ == '__main__':
                 rec_dist_dict = {**rec_emb_dist_dict, **rec_subseq_dist_dict}
                 rec_dist = deduper.merge_dist(rec_dist_dict, method='top')
                 if args.plot:
-                    deduper.plot_overview(rec_dist - rec_dist.min(), labels=rec_df['UID'].values, figsize=(20, 10), path=f'{"demo" if args.demo else (args.tag + "/子字符串+语义匹配计数")}/{dataset_name}_子字符串+语义匹配计数_overview.png')
+                    deduper.plot_overview(rec_dist - rec_dist.min(), labels=rec_df['UID'].values, figsize=(12, 6), path=f'{"demo" if args.demo else (args.tag + "/子字符串+语义匹配计数")}/{dataset_name}_子字符串+语义匹配计数_overview.pdf')
                 group_ids = deduper.deduplicate(rec_dist, method='top', ks=[2, 3, 4, 5])
                 for p, group_id in group_ids.items():
                     rec_df[p] = group_id
@@ -713,7 +719,7 @@ if __name__ == '__main__':
                 rec_dist_dict = {**rec_emb_dist_dict, **rec_subseq_dist_dict}
                 rec_dist = deduper.merge_dist(rec_dist_dict, weight_dict=field_weights, method='arithmetic')
                 if args.plot:
-                    deduper.plot_overview(rec_dist, labels=rec_df['UID'].values, figsize=(20, 10), path=f'{"demo" if args.demo else (args.tag + "/子字符串+语义距离加权")}/{dataset_name}_子字符串+语义距离加权_overview.png')
+                    deduper.plot_overview(rec_dist, labels=rec_df['UID'].values, figsize=(12, 6), path=f'{"demo" if args.demo else (args.tag + "/子字符串+语义距离加权")}/{dataset_name}_子字符串+语义距离加权_overview.pdf')
                 group_ids = deduper.deduplicate(rec_dist, method='single', ps=[0.01, 0.05, 0.10, 0.20])
                 for p, group_id in group_ids.items():
                     rec_df[p] = group_id

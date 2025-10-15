@@ -5,6 +5,7 @@
 *.zip
 *.pdf
 *tmp*
+*raw*
 
 # Python
 __pycache__/
