@@ -45,7 +45,7 @@ example_synonyms_embs_df = pd.DataFrame(example_synonyms_embs, index=example_syn
 # %%
 sns.clustermap(
     example_synonyms_embs_df, cmap='gray_r', 
-    metric='cosine', figsize=(10, 5), 
+    metric='cosine', figsize=(12, 7), 
     col_cluster=False,
     dendrogram_ratio=0.2,
 )
@@ -198,7 +198,7 @@ example_dates_embs_df = pd.DataFrame(example_dates_embs, index=example_dates)
 
 # %%
 sns.clustermap(
-    example_dates_embs_df, cmap='coolwarm',
+    example_dates_embs_df, cmap='gray_r',
     metric='cosine', figsize=(5, 3),
     col_cluster=False,
     dendrogram_ratio=0.2,
